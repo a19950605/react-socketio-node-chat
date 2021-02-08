@@ -1,8 +1,12 @@
 import io from 'socket.io-client';
 import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+
 import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './Chat.css';
+import Picker from 'emoji-picker-react';
+import { notify } from '../actions/newMsgActions';
 import ScrollToBottom from 'react-scroll-to-bottom';
 
 import UserList from './UserList';
@@ -10,12 +14,15 @@ import UserList from './UserList';
 var socket;
 
 const Chat = ({ room1, username, friendId }) => {
+	const dispatch = useDispatch();
+	const [chosenEmoji, setChosenEmoji] = useState(null);
+
 	const [userData, setUserData] = useState([]);
 	const [user, setCurrentUser] = useState({});
 	const [message, setMessage] = useState('');
 	const [messages, setMessages] = useState([]);
 	const [messages2, setMessages2] = useState([]);
-
+	const [notification, setNotification] = useState(false);
 	const search = useLocation().search;
 	const [myName, setMyName] = useState('');
 	const id = new URLSearchParams(search).get('uid');
@@ -26,6 +33,11 @@ const Chat = ({ room1, username, friendId }) => {
 		setMessages(tempmsg.data.message);
 
 		console.log(messages);
+	};
+	const onEmojiClick = (event, emojiObject) => {
+		//	setChosenEmoji(emojiObject);
+		console.log(emojiObject.emoji);
+		setMessage(message + emojiObject.emoji);
 	};
 	useEffect(() => {
 		setRoom(room1);
@@ -42,29 +54,6 @@ const Chat = ({ room1, username, friendId }) => {
 	useEffect(() => {
 		data();
 	}, []);
-
-	// const userData = [
-	// 	{
-	// 		username: 'wilson',
-	// 		id: '1',
-	// 	},
-	// 	{
-	// 		username: 'peter',
-	// 		id: '2',
-	// 	},
-	// 	{
-	// 		username: 'ken',
-	// 		id: '3',
-	// 	},
-	// 	{
-	// 		username: 'jeff',
-	// 		id: '4',
-	// 	},
-	// 	{
-	// 		username: 'holo',
-	// 		id: '5',
-	// 	},
-	// ];
 
 	const dummy = 'aaa';
 
@@ -113,14 +102,25 @@ const Chat = ({ room1, username, friendId }) => {
 	useEffect(() => {
 		socket.on('msg', ({ message, id, room }) => {
 			setMessages((messages) => [...messages, { message: message, from: id }]);
-
+			//	setNotification(true);
+			//dispatch(notify(id, room));
 			console.log('receive msg from server', message, room);
+		});
+		socket.on('notify', ({ message, id, room }) => {
+			setNotification(true);
+
+			dispatch(notify(id, room));
+			console.log(message, room);
 		});
 	}, []);
 
 	return (
 		<div className="container ">
-			<div className="receiver-name">{username || 'choose a user'}</div> <hr />
+			<div className="receiver-name " onClick={() => setNotification(false)}>
+				{' '}
+				{username || 'choose a user'}
+			</div>{' '}
+			<hr />
 			<ScrollToBottom className="content">
 				{messages.map((m) =>
 					m.from === id ? (
@@ -136,6 +136,18 @@ const Chat = ({ room1, username, friendId }) => {
 						</div>
 					)
 				)}{' '}
+				{/*	<Picker
+					onEmojiClick={onEmojiClick}
+					pickerStyle={{
+						width: '70%',
+						height: '50%',
+						background: 'blue',
+						color: 'white',
+						position: 'absolute',
+						right: '30px',
+						bottom: '20px',
+					}}
+				/>*/}
 			</ScrollToBottom>{' '}
 			<div className="text-input">
 				<input

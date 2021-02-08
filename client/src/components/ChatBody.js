@@ -1,12 +1,19 @@
 import React from 'react';
 import Chat from './Chat';
+import { useDispatch, useSelector } from 'react-redux';
+
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link, useLocation } from 'react-router-dom';
 import './Chat.css';
+import { removeNotify } from '../actions/newMsgActions';
 
 const ChatBody = () => {
+	const dispatch = useDispatch();
+
 	const [userData, setUserData] = useState([]);
+	const newMsg = useSelector((state) => state.newMsg);
+	const rmId = newMsg ? newMsg : '';
 	const search = useLocation().search;
 	const [name, setName] = useState('');
 	const id = new URLSearchParams(search).get('uid');
@@ -58,7 +65,25 @@ const ChatBody = () => {
 									setFriendId(user.friend._id);
 								}}
 							>
-								<div className="userList-item-content">{user.friend.username}</div>
+								<div className="userList-item-content">
+									{user.friend.username}
+									{rmId !== '' && rmId.find((rm) => rm.roomId === user.roomId) ? (
+										<div
+											className="red-dot"
+											style={{
+												backgroundColor: 'red',
+												width: '10px',
+												borderRadius: '50%',
+												height: '10px',
+											}}
+											onClick={() =>
+												user.roomId ? dispatch(removeNotify(user.roomId || '')) : ''
+											}
+										></div>
+									) : (
+										''
+									)}
+								</div>
 							</div>
 						))}
 				</div>

@@ -47,6 +47,7 @@ io.on('connection', function (socket) {
 			roomId: room,
 		});
 		chatMessage.save();
+		socket.broadcast.emit('notify', { message, id, room });
 		io.sockets.in(room).emit('msg', { message, id, room });
 	});
 });
